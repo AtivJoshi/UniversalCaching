@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 from Generate_network import generate_network_graph
-from Lead_cache import Lead_cache
+from IPLC import iplc
 
 # For single user
 users =1
@@ -69,5 +69,5 @@ for i in range(NumSeq):
     # df=np.array(df)
     df=np.array(RawSeq)
     df=df[np.newaxis,:]
-    hit_rates_Madow, download_rates_Madow = Lead_cache(df, Adj, time, library_size, C, d)
+    hit_rates_Madow, download_rates_Madow = iplc(df, Adj, time, library_size, C, d)
     print("hit rate: ", hit_rates_Madow )

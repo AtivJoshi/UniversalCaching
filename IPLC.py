@@ -19,7 +19,7 @@ from rounding_madow import madow_rounding
 # returns a list of hit_rate over time.
 # This code implements both the deterministic Pipage rounding as well as the randomized Madow's sampling-based rounding
 
-def Lead_cache(cache_request, Adj, T, F, C, d):
+def iplc(cache_request, Adj, T, F, C, d):
     
     hit_rate_Madow = []
     download_rate_Madow = []

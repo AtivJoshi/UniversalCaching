@@ -1,7 +1,4 @@
-import copy
-import csv
 import math
-import random
 
 import numpy as np
 import pandas as pd
@@ -41,7 +38,7 @@ horizon = 1000*users
 for i in range(NumSeq):
 
     # rating dataset
-    df = pd.DataFrame(data[int(i*DataLength/NumSeq) : int((i+1)*DataLength/NumSeq)])
+    df =data[int(i*DataLength/NumSeq) : int((i+1)*DataLength/NumSeq)]
     # df.sort_values("Timestamp")
 
     # cmu dataset

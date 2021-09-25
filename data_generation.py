@@ -5,7 +5,6 @@ from numba import njit
 Generate synthetic data for IPLC using markov chain. 
 For each user, initialize a random N x N transition matrix, where N is the number of files (library size) and store the generated sequence of states. Essentially, the requests made by any two users will be mutually independent.
 """
-# @njit
 def generate_data(N:int, T:int)->np.ndarray:
     transitionMatrix:np.ndarray = np.random.rand(N,N) # generate random matrix
     transitionMatrix = transitionMatrix/transitionMatrix.sum(axis=1,keepdims=True) # normalize the rows
@@ -15,7 +14,7 @@ def generate_data(N:int, T:int)->np.ndarray:
         state=np.random.choice(N,p=transitionMatrix[state,:])
         seq[i]=state
         if i%10000==0:
-            print(i," ")
+            print(i/100,end=" ",flush=True)
     return seq
 
 def main():

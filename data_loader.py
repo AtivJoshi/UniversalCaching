@@ -58,11 +58,10 @@ def load_synthetic_data(num_users:int, num_files:int, user:int=0)->np.ndarray:
     file_path=f'data/{file_name}'
 
     raw_seq=np.load(file_path)
-    
     # split raw_seq into chunks of size <num_users>
     num_requests=raw_seq.size//num_users
     input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_requests))
-    return input_seq        
+    return input_seq.astype('int64')
 
 def main():
     print(load_ratings_data(1,100))

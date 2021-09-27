@@ -1,5 +1,5 @@
 import math
-from typing import Tuple, Union, Dict
+from typing import Tuple, Dict
 from tqdm import tqdm
 import numpy as np
 
@@ -13,16 +13,20 @@ def iplc(
         num_files:int,
         cache_size:int,
         deg:int
-    )->Tuple[Dict[str,np.ndarray],Dict[str,int]]:
-    """
-        Incremental Parsing with Lead Cache
+    )->Tuple[Dict[str,int],Dict[str,int]]:
+    """Incremental Parsing with Lead Cache
         
+        Arguments:
         input_seq: input sequence of file requests
         adj_mat: adjacency matrix of the bipartite graph
         total_time: algorithm will run for min(total_time, len(input_seq))
         num_files: library size
         cache_size: storage space of each cache machine
         deg: degree of each cache machine
+
+        Outputs:
+        states_visits: total number of time the state is visited
+        states_hits: total number of hits at the state
     """
 
     num_users, num_cache=np.shape(adj_mat)
@@ -42,19 +46,19 @@ def iplc(
 
     # dict that store number of hits for each state
     states_hits={init_state:0}
-
+    states_visits={init_state:0}
     current_state=init_state
 
-    for t in range(total_time):
+    for t in tqdm(range(total_time)):
         Xr:np.ndarray=states_cumulative_request[current_state]
-        # print(Xr.shape)
         theta = np.maximum(Xr + eta_constant*(math.pow((t+1),0.5))*gamma, 0) # taking the non-negative part of theta only
 
         # y_t: cache configuration predicted at time t
         y_t,_ = SolveLP(adj_mat, theta, cache_size, t)
         y_madow = np.rint(madow_rounding(y_t, theta, adj_mat, cache_size))
 
-        # update the cumulative request of current_state
+        # update the cumulative request and total visit count of current_state
+        states_visits[current_state]+=1
         for i in range (num_users):
             m=input_seq[t,i]
             Xr[i,m]+=1
@@ -75,7 +79,8 @@ def iplc(
         if next_state not in states_cumulative_request:
             states_cumulative_request[next_state]=np.zeros((num_users,num_files))
             states_hits[next_state]=0
+            states_visits[next_state]=0
             current_state=init_state
         else:
             current_state=next_state
-    return states_cumulative_request, states_hits
+    return states_visits, states_hits

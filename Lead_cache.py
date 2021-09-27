@@ -34,7 +34,7 @@ def Lead_cache(cache_request, Adj, T, F, C, d):
     eta_constant = math.pow(I, 0.75)/(math.pow(2*d*(math.log(F/C) + 1), 0.25)*(math.pow(2*J*C, 0.5)))
     constr_violation_tol = 1.0
     #eta_constant = 0
-    
+    Y_prev_madow=0 
     Xr = np.zeros((I,F)) # this accounts for the cumulative file request 
     
     for t in range(T):
@@ -44,9 +44,9 @@ def Lead_cache(cache_request, Adj, T, F, C, d):
         #start variable saves the solution to the LP in the last time step, and use it to initalise the LPsolver in this timestep.
         # just initialize start to zero?
         if t>0:
-            (Y_f, start) = SolveLP(Adj, theta, C, start, t) # solves the LP and gets a fractional solution 
+            (Y_f, start) = SolveLP(Adj, theta, C, t) # solves the LP and gets a fractional solution 
         else:
-            (Y_f, start) = SolveLP(Adj, theta, C, 0, t) # dummy initializaton for t=0
+            (Y_f, start) = SolveLP(Adj, theta, C, t) # dummy initializaton for t=0
         
 
         

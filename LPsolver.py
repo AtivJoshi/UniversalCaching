@@ -1,7 +1,8 @@
 import math
 import numpy as np
 from scipy.optimize import linprog
-from cvxopt import matrix, solvers
+from cvxopt import solvers
+from cvxopt.base import matrix
 
 # Theta is a I*F matrix
 # C is the bound on number of files
@@ -9,12 +10,11 @@ from cvxopt import matrix, solvers
 
 # variables are order in this way:- z^1_1, z^2_1, ... z^J_1, i.e files are constant and we vary users similarly for y^j_f.
 
-def SolveLP(Adj, Theta, C, start, t):
+def SolveLP(Adj, Theta, C, t):
     
     I = np.shape(Adj)[0]
     J = np.shape(Adj)[1]
-    F = np.shape(Theta)[1]
-    
+    F = np.shape(Theta)[1] 
     
     A_Matrix = np.zeros(((I*F)+2*J,(I+J)*F)) #bigger Adj matrix for AX<=b'
     A_Matrix[0:I*F, 0:I*F] = np.eye(I*F)

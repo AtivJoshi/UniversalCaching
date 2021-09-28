@@ -48,7 +48,8 @@ def iplc(
     states_hits={init_state:0}
     states_visits={init_state:0}
     current_state=init_state
-
+    print(f'input length:{input_seq.shape}',flush=True)
+    total_time=min(input_seq.shape[0],total_time)
     for t in tqdm(range(total_time)):
         Xr:np.ndarray=states_cumulative_request[current_state]
         theta = np.maximum(Xr + eta_constant*(math.pow((t+1),0.5))*gamma, 0) # taking the non-negative part of theta only

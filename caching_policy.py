@@ -240,6 +240,7 @@ def iplc_multiple_fsm(
             for f in np.flatnonzero(adj_mat[user][:]):
                 if y_madow[f][int(input_seq[t,user])] >0.998:
                     states_hits[(user,current_state[user])]+=1
+                    break
         # states_hits[current_state]+=num_hits
 
         # for each user go to next state

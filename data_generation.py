@@ -31,11 +31,9 @@ def random_graph(nodes:int=100,p:float=0.05)->np.ndarray:
 def main():
     N=100
     T=1000000
-    users=1
-    for user in range(users):
+    users=10
+    for user in tqdm(range(users)):
         seq=generate_data(N,T)
-        with open('data/synthetic_erdos_renyi_'+str(user+1)+'.npy','wb') as f:
-            np.save(f,seq)
-
+        np.save('synthetic_erdos_renyi_'+str(user+1)+'.npy',seq)
 if __name__=="__main__":
     main()

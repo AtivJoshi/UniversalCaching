@@ -49,9 +49,9 @@ def load_cmu_data(num_users:int, num_files:int,folder_path:str="")->np.ndarray:
 
         # split raw_seq into chunks of size <num_users>
         num_requests=raw_seq.size//num_users
-        input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_requests))
-        np.save(cache_path,input_seq)
-        return input_seq        
+        input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_users))
+        np.save(cache_path,input_seq.T)
+        return input_seq.T 
 
 def load_synthetic_data(num_users:int, num_files:int, idx:int=0, folder_path:str="")->np.ndarray:
     file_name=f'synthetic_user_{idx}.npy'
@@ -60,12 +60,12 @@ def load_synthetic_data(num_users:int, num_files:int, idx:int=0, folder_path:str
     raw_seq=np.load(file_path)
     # split raw_seq into chunks of size <num_users>
     num_requests=raw_seq.size//num_users
-    input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_requests))
-    return input_seq.astype('int64')
+    input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_users))
+    return input_seq.T.astype('int64')
 
 def main():
-    print(load_ratings_data(1,100))
-    # print(load_cmu_data(3,100))
+    # print(load_ratings_data(1,100))
+    print(load_cmu_data(3,100))
     # print(load_synthetic_data(1,100))
 
 if __name__ == "__main__":

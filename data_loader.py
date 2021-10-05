@@ -12,12 +12,13 @@ def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarr
     else:
         df = pd.read_csv(file_path, sep = '::', engine='python')
         df.columns = ['User_ID', 'File_ID', 'Ratings', 'Timestamp']
-
+        df.sort_values(by='Timestamp') 
         # Total number of files = 3706
         # To control the size of the library, we rename file i to (i % num_files)
         old_id = df.File_ID.unique()
         old_id.sort()
-        new_id = dict(zip(old_id, np.arange(len(old_id))%num_files))
+        new_id = dict(zip(old_id, np.arange(len(old_id))))
+        df.drop(df[df['File_ID']>num_files].index,inplace=True)
         df = df.replace({"File_ID": new_id})
 
         # Array of file requests

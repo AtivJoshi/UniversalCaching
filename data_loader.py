@@ -14,12 +14,13 @@ def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarr
         df.columns = ['User_ID', 'File_ID', 'Ratings', 'Timestamp']
         df.sort_values(by=['User_ID','Timestamp'],inplace=True) 
         # Total number of files = 3706, total users=6040
-        # To control the size of the library, we rename file i to (i % num_files)
+        # To control the size of the library, we can rename the file i to (i % num_files). 
+        # This results in extremely bad accuracy, so avoiding it. Instead, drop the files when file_name > num_files.
         old_id = df.File_ID.unique()
         old_id.sort()
-        new_id = dict(zip(old_id, np.arange(len(old_id))%num_files))
-        # df.drop(df[df['File_ID']>num_files].index,inplace=True)
+        new_id = dict(zip(old_id, np.arange(len(old_id))))
         df = df.replace({"File_ID": new_id})
+        df.drop(list(df[df['File_ID']>num_files].index),inplace=True) ##pyright: reportGeneralTypeIssues=false
 
         # Array of file requests
         raw_seq=df['File_ID'].to_numpy()
@@ -28,7 +29,7 @@ def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarr
         num_requests=raw_seq.size//num_users
         input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_requests))
         np.save(cache_path,input_seq)
-        return input_seq
+        return input_seq.T
 
 def load_cmu_data(num_users:int, num_files:int,folder_path:str="")->np.ndarray:
     file_name="CMU_huge"

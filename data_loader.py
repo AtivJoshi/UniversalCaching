@@ -20,7 +20,7 @@ def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarr
         old_id.sort()
         new_id = dict(zip(old_id, np.arange(len(old_id))))
         df = df.replace({"File_ID": new_id})
-        df.drop(list(df[df['File_ID']>num_files].index),inplace=True) ##pyright: reportGeneralTypeIssues=false
+        df.drop(list(df[df['File_ID']>=num_files].index),inplace=True) ##pyright: reportGeneralTypeIssues=false
 
         # Array of file requests
         raw_seq=df['File_ID'].to_numpy()
@@ -29,7 +29,7 @@ def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarr
         num_requests=raw_seq.size//num_users
         input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_requests))
         np.save(cache_path,input_seq)
-        return input_seq.T
+        return input_seq
 
 def load_cmu_data(num_users:int, num_files:int,folder_path:str="")->np.ndarray:
     file_name="CMU_huge"

@@ -12,7 +12,7 @@ def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarr
     else:
         df = pd.read_csv(file_path, sep = '::', engine='python')
         df.columns = ['User_ID', 'File_ID', 'Ratings', 'Timestamp']
-        df.sort_values(by=['User_ID','Timestamp'],inplace=True) 
+        df.sort_values(by='Timestamp',inplace=True) 
         # Total number of files = 3706, total users=6040
         # To control the size of the library, we can rename the file i to (i % num_files). 
         # This results in extremely bad accuracy, so avoiding it. Instead, drop the files when file_name > num_files.
@@ -31,8 +31,7 @@ def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarr
         np.save(cache_path,input_seq)
         return input_seq
 
-def load_cmu_data(num_users:int, num_files:int,folder_path:str="")->np.ndarray:
-    file_name="CMU_huge"
+def load_cmu_data(num_users:int, num_files:int,folder_path:str="",file_name="CMU_huge")->np.ndarray:
     file_path=folder_path+f'data/{file_name}.txt'
     cache_path=folder_path+f'data/{file_name}_{num_users}u_{num_files}f_cache.npy'
 

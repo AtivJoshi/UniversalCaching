@@ -40,10 +40,13 @@ def load_cmu_data(num_users:int, num_files:int,folder_path:str="",file_name="CMU
     else:
         df = pd.read_csv(file_path, sep = ' ',engine='python')
         df.columns = ['Req_ID', 'File_ID', 'File_Size']
+        # To control the size of the library, we can rename the file i to (i % num_files). 
+        # This results in extremely bad accuracy, so avoiding it. Instead, drop the files when file_name > num_files.
         old_id = df.File_ID.unique()
         old_id.sort()
-        new_id = dict(zip(old_id, np.arange(len(old_id))%num_files))
+        new_id = dict(zip(old_id, np.arange(len(old_id))))
         df = df.replace({"File_ID": new_id})
+        df.drop(list(df[df['File_ID']>=num_files].index),inplace=True) ##pyright: reportGeneralTypeIssues=false
 
         # array of file requests
         raw_seq=df['File_ID'].to_numpy()

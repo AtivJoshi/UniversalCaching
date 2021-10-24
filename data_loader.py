@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os.path
 
+# sorting by timestamp
 def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarray:
     file_name='ratings'
     file_path=folder_path+f'data/{file_name}.dat'

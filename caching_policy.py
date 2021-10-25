@@ -33,7 +33,8 @@ def lc(
     total_time=min(input_seq.shape[0],total_time)
 
     # constants as defined in lead cache algorithm
-    gamma:np.ndarray=np.random.normal(0,1,(num_users,num_files))
+    # gamma:np.ndarray=np.random.normal(0,1,(num_users,num_files))
+    gamma:np.ndarray=np.random.gumbel(0,1,(num_users,num_files))
     eta_constant:float = math.pow(num_users, 0.75)/(math.pow(2*deg*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*num_cache*cache_size, 0.5)))
     constr_violation_tol = 1.0
 
@@ -91,7 +92,8 @@ def iplc_multiple_fsm(
     num_users, num_cache=np.shape(adj_mat)
     total_time=min(input_seq.shape[0],total_time)
     # constants as defined in lead cache algorithm
-    gamma:np.ndarray=np.random.normal(0,1,(num_users,num_files))
+    # gamma:np.ndarray=np.random.normal(0,1,(num_users,num_files))
+    gamma:np.ndarray=np.random.gumbel(0,1,(num_users,num_files))
     eta_constant:float = math.pow(num_users, 0.75)/(math.pow(2*deg*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*num_cache*cache_size, 0.5)))
     constr_violation_tol = 1.0
 

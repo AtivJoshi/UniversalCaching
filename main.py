@@ -49,7 +49,7 @@ def experiment1():
     
     # Run iplc algorithm
 
-    cumulative_req,hits=iplc_multiple_fsm(data,graph,total_time,num_files,cache_size,deg)
+    cumulative_req,hits,s=iplc_multiple_fsm(data,graph,total_time,num_files,cache_size,deg)
 
     # Make dataframe
     df=pd.DataFrame(list(cumulative_req.items()),columns=['state','visits'])

@@ -139,7 +139,7 @@ def iplc_multiple_fsm(
         # update the cumulative request and total visit count of each (user,current_state)
         for u in range(num_users):
             states_visits[(u,current_state[u])]+=1
-            m:int=input_seq[t,i]
+            m:int=input_seq[t,u]
             user_states_cumulative_request[(u,current_state[u])][m]+=1
 
         # update the total hit count of current state
@@ -164,6 +164,20 @@ def iplc_multiple_fsm(
             else:
                 current_state[user]=next_state
     return states_visits, states_hits
+
+
+# def markov_offline(
+#         input_seq:np.ndarray, 
+#         adj_mat:np.ndarray,
+#         total_time:int,
+#         num_files:int,
+#         cache_size:int,
+#         deg:int
+#     )->Tuple[Dict[Tuple[int,str],int],Dict[Tuple[int,str],int]]:
+
+#     num_users, num_cache=np.shape(adj_mat)
+#     total_time=min(input_seq.shape[0],total_time)
+
 
 ################################################################################################################################################
 

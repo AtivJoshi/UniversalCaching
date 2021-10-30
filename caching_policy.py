@@ -73,7 +73,7 @@ def iplc_multiple_fsm(
         num_files:int,
         cache_size:int,
         deg:int
-    )->Tuple[Dict[Tuple[int,str],int],Dict[Tuple[int,str],int]]:
+    )->Tuple[Dict[Tuple[int,str],int],Dict[Tuple[int,str],int],Dict[Tuple[int,str],np.ndarray]]:
     """Incremental Parsing with Lead Cache
         
         Arguments:
@@ -126,6 +126,7 @@ def iplc_multiple_fsm(
         # array of how many times the current_state of a user is visited
         time_array=np.zeros((num_users,1))
 
+        # building Xr
         for i in range(num_users):
             Xr[i,:]=user_states_cumulative_request[(i,current_state[i])]
             time_array[i]=states_visits[(i,current_state[i])]+1
@@ -136,7 +137,7 @@ def iplc_multiple_fsm(
         y_t,_ = SolveLP(adj_mat, theta, cache_size, t)
         y_madow = np.rint(madow_rounding(y_t, theta, adj_mat, cache_size))
 
-        # update the cumulative request and total visit count of each (user,current_state)
+        # observe the cache request and update the cumulative request and total visit count of each (user,current_state)
         for u in range(num_users):
             states_visits[(u,current_state[u])]+=1
             m:int=input_seq[t,u]
@@ -163,7 +164,7 @@ def iplc_multiple_fsm(
                 current_state[user]=init_state
             else:
                 current_state[user]=next_state
-    return states_visits, states_hits
+    return states_visits, states_hits, user_states_cumulative_request
 
 
 # def markov_offline(

@@ -73,7 +73,7 @@ def iplc_multiple_fsm(
         num_files:int,
         cache_size:int,
         deg:int
-    )->Tuple[Dict[Tuple[int,str],int],Dict[Tuple[int,str],int],Dict[Tuple[int,str],np.ndarray]]:
+    )->Tuple[Dict[Tuple[int,str],int],Dict[Tuple[int,str],int],Dict]:
     """Incremental Parsing with Lead Cache
         
         Arguments:
@@ -91,6 +91,7 @@ def iplc_multiple_fsm(
 
     num_users, num_cache=np.shape(adj_mat)
     total_time=min(input_seq.shape[0],total_time)
+    
     # constants as defined in lead cache algorithm
     gamma:np.ndarray=np.random.normal(0,1,(num_users,num_files))
     # gamma:np.ndarray=np.random.gumbel(0,1,(num_users,num_files))
@@ -102,21 +103,25 @@ def iplc_multiple_fsm(
     # State corresponding to sequence (34,45,90) is labeled by 'epsilon:34:45:90'
     init_state='epsilon'
 
-    # dict that stores cumulative request for each state
-    # instead of nested dictionary, using dictionary with tuple as a key
+    # dict that stores cumulative request (no. of times a file is requested)
+    # at a given state for each user. Instead of nested dictionary, using dictionary with tuple as a key
     user_states_cumulative_request:Dict[Tuple[int,str],np.ndarray]={}
+
+    # current state of a given user
     current_state:Dict[int,str]={}
-    states_hits:Dict[Tuple[int,str],int]={}
+
+    # no of times a state is visited for a particular user
     states_visits:Dict[Tuple[int,str],int]={}
+
+    # no of hits at a given state of a user
+    states_hits:Dict[Tuple[int,str],int]={}
+
+    # initialize 
     for i in range(num_users):
         user_states_cumulative_request[(i,init_state)]=np.zeros(num_files) # index is (user,current_state)
         current_state[i]=init_state # index is user
         states_hits[(i,init_state)]=0 # index is (user,current_state)
         states_visits[(i,init_state)]=0 # index is (user,current_state)
-    # dict that store number of hits for each state
-    # states_hits={init_state:0}
-    # states_visits={init_state:0}
-    # current_state=init_state
 
     for t in tqdm(range(total_time)):
 
@@ -126,21 +131,23 @@ def iplc_multiple_fsm(
         # array of how many times the current_state of a user is visited
         time_array=np.zeros((num_users,1))
 
-        # building Xr
+        # Building Xr. For each user, take the array of cumulative request of the current state.
+        # No. of visits of current_state is maintained separately for each user. This is used to build eta.
         for i in range(num_users):
             Xr[i,:]=user_states_cumulative_request[(i,current_state[i])]
             time_array[i]=states_visits[(i,current_state[i])]+1
 
+        # Get theta by perturbing Xr using eta and gamma
         theta = np.maximum(Xr + eta_constant*(np.sqrt(time_array))*gamma, 0) # taking the non-negative part of theta only
 
         # y_t: cache configuration predicted at time t
         y_t,_ = SolveLP(adj_mat, theta, cache_size, t)
         y_madow = np.rint(madow_rounding(y_t, theta, adj_mat, cache_size))
 
-        # observe the cache request and update the cumulative request and total visit count of each (user,current_state)
+        # observe the incoming cache request at time t and update the cumulative request and total visit count of current_state for each user
         for u in range(num_users):
-            states_visits[(u,current_state[u])]+=1
-            m:int=input_seq[t,u]
+            states_visits[(u,current_state[u])]+=1 
+            m:int=input_seq[t,u] # file requested at by user u at time t
             user_states_cumulative_request[(u,current_state[u])][m]+=1
 
         # update the total hit count of current state
@@ -149,8 +156,7 @@ def iplc_multiple_fsm(
             for f in np.flatnonzero(adj_mat[user][:]):
                 if y_madow[f][int(input_seq[t,user])] >0.998:
                     states_hits[(user,current_state[user])]+=1
-                    break
-        # states_hits[current_state]+=num_hits
+                    break # since a user requests exactly one file at a time
 
         # for each user go to next state
         for user in range(num_users):
@@ -164,7 +170,7 @@ def iplc_multiple_fsm(
                 current_state[user]=init_state
             else:
                 current_state[user]=next_state
-    return states_visits, states_hits, user_states_cumulative_request
+    return states_visits, states_hits, {}
 
 
 # def markov_offline(

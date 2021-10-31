@@ -14,12 +14,12 @@ from network_generator import *
 
 def experiment1():
     # initialize parameters
-    num_users=1
-    num_caches=1
-    deg=1
+    num_users=15
+    num_caches=7
+    deg=8
     num_files=300
     cache_size=int(0.1*num_files)
-    total_time=500000
+    total_time=9000
     folder_path=''
 
     g_path=folder_path+ f'data/graph_u{num_users}_c{num_caches}_d{deg}.npy'
@@ -43,9 +43,10 @@ def experiment1():
     data.shape
 
     # leadcache
-    cumulative_req2,hits2=lc(data,graph,total_time,num_files,cache_size,deg)
-    hitrate_leadcache=hits2/(cumulative_req2*num_users)
-    hitrate_leadcache
+    # cumulative_req2,hits2=lc(data,graph,total_time,num_files,cache_size,deg)
+    # hitrate_leadcache=hits2/(cumulative_req2*num_users)
+    hitrate_leadcache=0
+    print(hitrate_leadcache)
     
     # Run iplc algorithm
 
@@ -79,7 +80,7 @@ def experiment1():
         df1
 
 def main():
-    pass
+    experiment1()
 
 if __name__=='__main__':
     main()

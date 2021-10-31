@@ -2,6 +2,12 @@ import numpy as np
 import pandas as pd
 import os.path
 
+# split
+def split_data(raw_seq:np.ndarray,num_users:int)->np.ndarray:
+    num_requests=raw_seq.size//num_users
+    input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_requests))
+    return input_seq
+
 # sorting by timestamp
 def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarray:
     file_name='ratings'

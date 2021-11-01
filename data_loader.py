@@ -5,8 +5,8 @@ import os.path
 # split
 def split_data(raw_seq:np.ndarray,num_users:int)->np.ndarray:
     num_requests=raw_seq.size//num_users
-    input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_requests))
-    return input_seq
+    input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_users))
+    return input_seq.T
 
 # sorting by timestamp
 def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarray:
@@ -31,6 +31,9 @@ def load_ratings_data(num_users:int, num_files:int,folder_path:str="")->np.ndarr
 
         # Array of file requests
         raw_seq=df['File_ID'].to_numpy()
+        print(raw_seq[:20])
+        print('shape ', raw_seq.shape)
+        print('size ',raw_seq.size)
 
         # Split raw_seq into chunks of size <num_users>
         num_requests=raw_seq.size//num_users
@@ -75,7 +78,7 @@ def load_synthetic_data(num_users:int, num_files:int, idx:int=0, folder_path:str
     return input_seq.T.astype('int64')
 
 def main():
-    # print(load_ratings_data(1,100))
+    # print('ratings: ', load_ratings_data(3,100))
     print(load_cmu_data(3,100))
     # print(load_synthetic_data(1,100))
 

@@ -240,3 +240,63 @@ def markov_offline(
             current_state[u]=next_state
         
     return states_visits,states_hits
+
+
+def markov_online(
+        input_seq:np.ndarray, 
+        adj_mat:np.ndarray,
+        total_time:int,
+        num_files:int,
+        cache_size:int,
+        deg:int,
+        k:int
+    ):
+
+    num_users, num_cache=np.shape(adj_mat)
+
+    markov:Dict[Tuple[int,Tuple],np.ndarray]={}
+
+    # current state of a given user
+    current_state:Dict[int,Tuple]={}
+
+    # no of times a state is visited for a particular user
+    states_visits:Dict[Tuple[int,Tuple],int]={}
+
+    # no of hits at a given state of a user
+    states_hits:Dict[Tuple[int,Tuple],int]={}
+
+    for i in range(num_users):
+        markov[(i,tuple(input_seq[:k,i]))]=np.zeros(num_files) # index is (user,current_state)
+        current_state[i]=tuple(input_seq[:k,i]) # index is user
+        states_hits[(i,tuple(input_seq[:k,i]))]=0 # index is (user,current_state)
+        states_visits[(i,tuple(input_seq[:k,i]))]=0 # index is (user,current_state)
+
+    for t in tqdm(range(k,total_time)):
+        Xr=np.zeros((num_users,num_files))
+        for i in range(num_users):
+            # print(f'{t} {i} {current_state[i]}')
+            Xr[i,:]=markov[(i,current_state[i])]
+        y_t,_ = SolveLP(adj_mat, Xr, cache_size, t)
+        y_madow = np.rint(madow_rounding(y_t, Xr, adj_mat, int(cache_size)))
+
+        # observe the incoming cache request at time t and update the cumulative request and total visit count of current_state for each user
+        for u in range(num_users):
+            states_visits[(u,current_state[u])]+=1
+            m:int=input_seq[t,u]
+            markov[(u,current_state[u])][m]+=1
+
+        # update the total hit count of current state
+        for u in range(num_users):
+            for f in np.flatnonzero(adj_mat[u][:]):
+                if y_madow[f][int(input_seq[t,u])] >0.998:
+                    states_hits[(u,current_state[u])]+=1
+                    break # since a user requests exactly one file at a time
+        # for each user go to next state
+        for u in range(num_users):
+            m:int=input_seq[t,u]
+            next_state=current_state[u][1:]+(m,)
+            if (u,next_state) not in markov:
+                markov[(u,next_state)]=np.zeros(num_files)
+                states_hits[(u,next_state)]=0
+                states_visits[(u,next_state)]=0
+            current_state[u]=next_state

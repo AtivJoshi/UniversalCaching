@@ -300,3 +300,4 @@ def markov_online(
                 states_hits[(u,next_state)]=0
                 states_visits[(u,next_state)]=0
             current_state[u]=next_state
+    return states_visits,states_hits

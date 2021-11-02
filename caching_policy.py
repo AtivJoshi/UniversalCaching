@@ -205,8 +205,7 @@ def markov_offline(
         states_hits[(i,tuple(input_seq[:k,i]))]=0 # index is (user,current_state)
         states_visits[(i,tuple(input_seq[:k,i]))]=0 # index is (user,current_state)
 
-    # construct markov fsm
-    for t in range(3,total_time):
+    for t in range(k,total_time):
         for u in range(num_users):
             states_visits[(u,current_state[u])]+=1
             m:int=input_seq[t,u]

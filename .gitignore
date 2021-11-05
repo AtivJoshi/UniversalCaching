@@ -3,3 +3,4 @@
 !*.py
 !results.ipynb
 !results_old.ipynb
+!results*

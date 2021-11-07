@@ -326,10 +326,34 @@ def binary_markov_offline(input_seq:np.ndarray,
         hits+=markov[key].max()
     return markov,hits
 
+def binary_markov_online(input_seq:np.ndarray,
+        total_time:int,
+        k:int
+    ):
+    markov:Dict[Tuple[int,...],np.ndarray]={tuple(input_seq[:k]):np.array([0,0])}
+    current_state:Tuple=tuple(input_seq[:k])
+    hits=0
+    for t in tqdm(range(total_time)):
+        prediction=np.uint8(markov[current_state].argmax())
+        # print(f'curr: {current_state}')
+        # print(f'markov: {markov}')
+        # print(f'pred: {prediction}')
+        # print(f'nb: {input_seq[t]}\n')
+        if input_seq[t]==prediction:
+            hits+=1
+        markov[current_state][input_seq[t]]+=1
+        next_state=current_state[1:]+(input_seq[t],)
+
+        if next_state not in markov:
+            markov[next_state]=np.array([0,0])
+        current_state=next_state
+    return markov,hits
+
+
 def main():
     arr=np.random.randint(2,size=(10),dtype=np.int8)
     print(arr)
-    m,h=binary_markov_offline(arr,arr.shape[0],2)
+    m,h=binary_markov_online(arr,arr.shape[0],2)
     print(h,m)
 
 if __name__=='__main__':

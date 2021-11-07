@@ -301,3 +301,36 @@ def markov_online(
                 states_visits[(u,next_state)]=0
             current_state[u]=next_state
     return states_visits,states_hits
+
+def binary_markov_offline(input_seq:np.ndarray,
+        total_time:int,
+        k:int
+    ):
+    markov:Dict[Tuple[int,...],np.ndarray]={tuple(input_seq[:k]):np.array([0,0])}
+    
+    current_state:Tuple=tuple(input_seq[:k])
+    # states_visits or states_hits are not required
+    # states_hits:Dict[Tuple,int]={tuple(input_seq[:k]):0}
+    for t in tqdm(range(total_time)):
+        markov[current_state][input_seq[t]]+=1
+        # print(f't: {t}')
+        # print(f'cs: {current_state}, inp: {input_seq[t]}')
+        # print(markov)
+        
+        next_state=current_state[1:]+(input_seq[t],)
+        if next_state not in markov:
+            markov[next_state]=np.array([0,0])
+        current_state=next_state
+    hits=0
+    for key in markov:
+        hits+=markov[key].max()
+    return markov,hits
+
+def main():
+    arr=np.random.randint(2,size=(10),dtype=np.int8)
+    print(arr)
+    m,h=binary_markov_offline(arr,arr.shape[0],2)
+    print(h,m)
+
+if __name__=='__main__':
+    main()

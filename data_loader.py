@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os.path
+from tqdm import tqdm
 
 # split
 def split_data(raw_seq:np.ndarray,num_users:int)->np.ndarray:
@@ -76,6 +77,46 @@ def load_synthetic_data(num_users:int, num_files:int, idx:int=0, folder_path:str
     num_requests=raw_seq.size//num_users
     input_seq=np.array(np.array_split(raw_seq[:num_users*num_requests],num_users))
     return input_seq.T.astype('int64')
+
+
+def iter_chunk_by_id_ratings(path,chunk_size):
+    '''
+    reference: https://stackoverflow.com/a/58567203/6361960
+    Ratings data is already sorted by userid. 
+    We read all rows belonging to each userId, 
+    sort them by timestamp, and yield the array of movieId.
+    '''
+    csv_reader=pd.read_csv(path,iterator=True,chunksize=chunk_size,header=0,error_bad_lines=False,parse_dates=['timestamp'])
+    term=0
+    chunk = pd.DataFrame()
+
+    for l in csv_reader:
+        hits=l['userId'].astype(float).diff().dropna().to_numpy().nonzero()[0]
+        if not len(hits):
+            # if all ids are same
+            chunk = chunk.append(l[['userId','movieId','timestamp']])
+        else:
+            start = 0
+            for i in range(len(hits)):
+                new_id = hits[i]+1
+                chunk = chunk.append(l[['userId','movieId','timestamp']].iloc[start:new_id, :])
+                chunk.sort_values(by='timestamp',inplace=True)
+                yield chunk['movieId'].to_numpy()
+                chunk = pd.DataFrame()
+                start = new_id
+            chunk = l[['userId','movieId','timestamp']].iloc[start:, :]
+    yield chunk['movieId'].to_numpy()
+
+def ratings25m():
+    arr=np.empty(shape=25000100,dtype=np.uint16)
+    start=0
+    path=f'data/ratings25m/ml-25m/ratings.csv'
+    with tqdm(total=25000100) as pbar:
+        for c in iter_chunk_by_id_ratings(path,500):
+            arr[start:start+c.shape[0]]=c
+            start+=c.shape[0]
+            pbar.update(c.shape[0])
+        np.save(file='data/ratings25m/ml-25m/ratings.npy',arr=arr[:25000095])
 
 def main():
     # print('ratings: ', load_ratings_data(3,100))

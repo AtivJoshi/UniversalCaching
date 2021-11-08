@@ -355,12 +355,12 @@ def binary_ip(input_seq:np.ndarray,
     fsm:Dict[Tuple[int,...],np.ndarray]={():np.array([0,0])}
     current_state:Tuple=tuple()
     hits=0
-    for t in range(total_time):
+    for t in tqdm(range(total_time)):
         pred=np.uint8(fsm[current_state].argmax())
-        print(f'curr: {current_state}')
-        print(f'markov: {fsm}')
-        print(f'pred: {pred}')
-        print(f'nb: {input_seq[t]}\n')
+        # print(f'curr: {current_state}')
+        # print(f'markov: {fsm}')
+        # print(f'pred: {pred}')
+        # print(f'nb: {input_seq[t]}\n')
         if input_seq[t]==pred:
             hits+=1
         fsm[current_state][input_seq[t]]+=1

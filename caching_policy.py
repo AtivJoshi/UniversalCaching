@@ -349,11 +349,35 @@ def binary_markov_online(input_seq:np.ndarray,
         current_state=next_state
     return markov,hits
 
+def binary_ip(input_seq:np.ndarray,
+        total_time:int
+    ):
+    fsm:Dict[Tuple[int,...],np.ndarray]={():np.array([0,0])}
+    current_state:Tuple=tuple()
+    hits=0
+    for t in range(total_time):
+        pred=np.uint8(fsm[current_state].argmax())
+        print(f'curr: {current_state}')
+        print(f'markov: {fsm}')
+        print(f'pred: {pred}')
+        print(f'nb: {input_seq[t]}\n')
+        if input_seq[t]==pred:
+            hits+=1
+        fsm[current_state][input_seq[t]]+=1
+        next_state=current_state+(input_seq[t],)
+
+        if next_state not in fsm:
+            fsm[next_state]=np.array([0,0])
+            current_state=()
+        else:
+            current_state=next_state
+    return fsm,hits
+
 
 def main():
     arr=np.random.randint(2,size=(10),dtype=np.int8)
     print(arr)
-    m,h=binary_markov_online(arr,arr.shape[0],2)
+    m,h=binary_ip(arr,arr.shape[0])
     print(h,m)
 
 if __name__=='__main__':

@@ -219,6 +219,7 @@ def markov_offline(
 
     # for single cache, the optimal policy is to fetch most often requested files
     # for multiple caches, do we approximate using relaxed LP + madow's sampling?
+    # no need to add random vector in offline algorithm
     for i in range(num_users):
         current_state[i]=tuple(input_seq[:k,i])
 

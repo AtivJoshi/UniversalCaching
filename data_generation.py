@@ -28,18 +28,6 @@ def random_graph(nodes:int=100,p:float=0.05)->np.ndarray:
     # A.to_numpy_array()
     return np.array(A.todense())
 
-def main():
-    N=50
-    C=5
-    S=50
-    T=1000000
-    p=np.array([0.5,0.25,0.125,0.0625,0.0625])
-    seq=generate_data_fsm(N,C,S,T,p)
-    np.save(f'synthetic_fsm_num_files{N}_cache_size{C}_S{S}_T{T}.npy',seq)
-    # for user in tqdm(range(users)):
-    #     seq=generate_data(N,T)
-    #     np.save('synthetic_erdos_renyi_'+str(user+1)+'.npy',seq)
-
 # Generate a random sequence of file requests for one user that can be deterministically predicted by an FSP with cache size C.
 # First, initialize a random FSM and fix C files randomly for each state.
 # Then at each timestep, output a random file from the list of C files and go to the next state.
@@ -68,6 +56,19 @@ def generate_data_fsm(
         current_state=g[current_state,x]
     print(seq.dtype)
     return seq
+    
+def main():
+    N=50
+    C=5
+    S=100
+    T=1000000
+    p=np.array([0.5,0.25,0.125,0.0625,0.0625])
+    seq=generate_data_fsm(N,C,S,T,p)
+    np.save(f'synthetic_fsm_num_files{N}_cache_size{C}_S{S}_T{T}.npy',seq)
+    # for user in tqdm(range(users)):
+    #     seq=generate_data(N,T)
+    #     np.save('synthetic_erdos_renyi_'+str(user+1)+'.npy',seq)
+
 
 if __name__=="__main__":
     main()

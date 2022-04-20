@@ -3,7 +3,7 @@ import sys
 import time
 import pytz
 import os.path
-
+import numpy as np
 from datetime import datetime as dt
 IST=pytz.timezone('Asia/Kolkata')
 
@@ -80,7 +80,12 @@ def experiment1():
         df1
 
 def main():
-    experiment1()
+    # experiment1()
+    data=np.load('data/synthetic_fsm_num_files50_cache_size5_S50_T1000000.npy')
+    data=data[:,np.newaxis]
+    data=data.astype('int64')
+    cumulative_req,hits=hedge_single_cache(data,1000,50,5)
+    
 
 if __name__=='__main__':
     main()

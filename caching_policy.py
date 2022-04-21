@@ -65,14 +65,161 @@ def lc(
 
     return visits, hits
 
-def hedge_single_cache(
+def ftpl(
+        input_seq:np.ndarray, 
+        # adj_mat:np.ndarray,
+        total_time:int,
+        num_files:int,
+        cache_size:int,
+        # deg:int
+    )->Tuple[int,int,np.ndarray]:
+    """Incremental Parsing with Lead Cache
+        
+        Arguments:
+        input_seq: input sequence of file requests
+        adj_mat: adjacency matrix of the bipartite graph
+        total_time: algorithm will run for min(total_time, len(input_seq))
+        num_files: library size
+        cache_size: storage space of each cache machine
+        deg: degree of each cache machine
+
+        Outputs:
+        states_visits: total number of time the state is visited
+        states_hits: total number of hits at the state
+    """
+
+    # num_users, num_cache=np.shape(adj_mat)
+    total_time=min(input_seq.shape[0],total_time)
+    rec_hitrate=np.zeros(total_time)
+    # constants as defined in lead cache algorithm
+    # gamma:np.ndarray=np.random.normal(0,1,(num_users,num_files))
+    # gamma:np.ndarray=np.random.gumbel(0,1,(num_users,num_files))
+    # eta_constant:float = math.pow(num_users, 0.75)/(math.pow(2*deg*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*num_cache*cache_size, 0.5)))
+    # constr_violation_tol = 1.0
+    gamma:np.ndarray=np.random.gumbel(0,1,(1,num_files))
+    # eta_constant:float = math.pow(num_users, 0.75)/(math.pow(2*deg*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*num_cache*cache_size, 0.5)))
+    eta_constant:float = 1/(math.pow(2*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*cache_size, 0.5)))
+
+    visits:int=0
+    hits:int=0
+    Xr:np.ndarray=np.zeros((1,num_files))
+    for t in tqdm(range(total_time)):
+        # taking the non-negative part of theta only
+        # multiplying t with eta for eta_t as in step 5 of algorithm 1
+        theta = np.maximum(Xr + eta_constant*(math.pow((t+1),0.5))*gamma, 0)  
+
+        # y_t: cache configuration predicted at time t
+        # y_t,_ = SolveLP(adj_mat, theta, cache_size, t)
+        # y_madow = np.rint(madow_rounding(y_t, theta, adj_mat, cache_size))
+
+        y_madow=np.argsort(theta)[0][::-1][:cache_size]
+
+        visits+=1
+        # for i in range (num_users):
+        m=input_seq[t,0]
+        Xr[0,m]+=1
+
+        if m in y_madow:
+            hits+=1
+        # update the total hit count of current state
+        # for user in range(num_users):
+        #     for f in np.flatnonzero(adj_mat[user][:]):
+        #         if y_madow[f][int(input_seq[t,user])] >0.998:
+        #             hits+=1
+        #             break # since each user requests exactly one file
+        rec_hitrate[t]=hits/(t+1)
+    return visits, hits, rec_hitrate
+
+
+def markov_online_single_cache(
+        input_seq:np.ndarray, 
+        total_time:int,
+        num_files:int,
+        cache_size:int,
+        k:int
+    ):
+
+    # num_users, num_cache=np.shape(adj_mat)
+    gamma:np.ndarray=np.random.gumbel(0,1,(1,num_files))
+    # eta_constant:float = math.pow(num_users, 0.75)/(math.pow(2*deg*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*num_cache*cache_size, 0.5)))
+    eta_constant:float = 1/(math.pow(2*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*cache_size, 0.5)))
+
+    markov:Dict[Tuple,np.ndarray]={}
+
+    # current state of a given user
+    # current_state:Dict[int,Tuple]={}
+
+    # no of times a state is visited for a particular user
+    states_visits:Dict[Tuple,int]={}
+
+    # no of hits at a given state of a user
+    states_hits:Dict[Tuple,int]={}
+
+    # for i in range(num_users):
+    markov[tuple(input_seq[:k,0])]=np.zeros(num_files) # index is (user,current_state)
+    current_state=tuple(input_seq[:k,0]) # index is user
+    states_hits[tuple(input_seq[:k,0])]=0 # index is (user,current_state)
+    states_visits[tuple(input_seq[:k,0])]=0 # index is (user,current_state)
+
+    rec_hitrate=np.zeros(total_time)
+    rec_states=np.zeros(total_time)
+    hits=0
+    total_visited_states=0
+    for t in tqdm(range(k,total_time)):
+        Xr=np.zeros((1,num_files))
+        # for i in range(num_users):
+            # print(f'{t} {i} {current_state[i]}')
+        time_array=0
+        Xr[0,:]=markov[current_state]
+        time_array=states_visits[current_state]+1
+        
+        # Get theta by perturbing Xr using eta and gamma
+        theta = np.maximum(Xr + eta_constant*(np.sqrt(time_array))*gamma, 0) # taking the non-negative part of theta only
+
+        # y_t,_ = SolveLP(adj_mat, Xr, cache_size, t)
+        # y_madow = np.rint(madow_rounding(y_t, Xr, adj_mat, int(cache_size)))
+        y_madow=np.argsort(theta)[0][::-1][:cache_size]
+        # observe the incoming cache request at time t and update the cumulative request and total visit count of current_state for each user
+        # for u in range(num_users):
+        states_visits[current_state]+=1
+        m:int=input_seq[t,0]
+        markov[current_state][m]+=1
+        if m in y_madow:
+            states_hits[current_state]+=1
+            hits+=1
+        # update the total hit count of current state
+        # for u in range(num_users):
+        #     for f in np.flatnonzero(adj_mat[u][:]):
+        #         if y_madow[f][int(input_seq[t,u])] >0.998:
+        #             states_hits[(u,current_state[u])]+=1
+        #             break # since a user requests exactly one file at a time
+
+        # for each user go to next state
+        # for u in range(num_users):
+            # m:int=input_seq[t,u]
+        next_state=current_state[1:]+(m,)
+        if next_state not in markov:
+            markov[next_state]=np.zeros(num_files)
+            states_hits[next_state]=0
+            states_visits[next_state]=0
+        current_state=next_state
+
+        if states_visits[current_state]==1:
+            total_visited_states+=1
+
+        rec_hitrate[t]=hits/(t+1)
+        rec_states[t]=total_visited_states
+    return states_visits,states_hits, rec_hitrate, rec_states
+
+
+def hedge_fsm_single_cache(
         input_seq:np.ndarray, 
         # adj_mat:np.ndarray,
         total_time:int,
         num_files:int,
         cache_size:int
         # deg:int
-    )->Tuple[Dict[str,int],Dict[str,int]]:
+    )->Tuple[Dict[str,int],Dict[str,int],np.ndarray,np.ndarray]:
     """Hedge for single cache setting
         
         Arguments:
@@ -92,8 +239,8 @@ def hedge_single_cache(
     total_time=min(input_seq.shape[0],total_time)
     
     # constants as defined in lead cache algorithm
-    gamma:np.ndarray=np.random.normal(0,1,(1,num_files))
-    # gamma:np.ndarray=np.random.gumbel(0,1,(num_users,num_files))
+    # gamma:np.ndarray=np.random.normal(0,1,(1,num_files))
+    gamma:np.ndarray=np.random.gumbel(0,1,(1,num_files))
     # eta_constant:float = math.pow(num_users, 0.75)/(math.pow(2*deg*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*num_cache*cache_size, 0.5)))
     eta_constant:float = 1/(math.pow(2*(math.log(num_files/cache_size) + 1), 0.25)*(math.pow(2*cache_size, 0.5)))
     # constr_violation_tol = 1.0
@@ -132,6 +279,10 @@ def hedge_single_cache(
     states_hits[init_state]=0
     states_visits[init_state]=0
 
+    rec_hitrate=np.zeros(total_time)
+    rec_states=np.zeros(total_time)
+    hits=0
+    total_visited_states=0
     for t in tqdm(range(total_time)):
 
         #use current_state of FSM of each user to build Xr and compute theta
@@ -156,7 +307,6 @@ def hedge_single_cache(
         # y_t,_ = SolveLP(adj_mat, theta, cache_size, t)
         # y_madow = np.rint(madow_rounding(y_t, theta, adj_mat, cache_size))
         y_madow=np.argsort(theta)[0][::-1][:cache_size]
-        # print(y_madow)
         # y_madow=y_madow[:2]
         # observe the incoming cache request at time t and update the cumulative request and total visit count of current_state for each user
         # for u in range(num_users):
@@ -175,6 +325,7 @@ def hedge_single_cache(
         #             break # since a user requests exactly one file at a time
         if m in y_madow:
             states_hits[current_state]+=1
+            hits+=1
 
         # for each user go to next state
         # for user in range(num_users):
@@ -190,6 +341,9 @@ def hedge_single_cache(
             #     current_state[user]=init_state
             # else:
             #     current_state[user]=next_state
+        if states_visits[current_state]==1:
+            total_visited_states+=1
+
         if next_state not in user_states_cumulative_request:
             user_states_cumulative_request[next_state]=np.zeros(num_files)
             states_hits[next_state]=0
@@ -198,7 +352,9 @@ def hedge_single_cache(
         else:
             current_state=next_state
 
-    return states_visits, states_hits
+        rec_hitrate[t]=hits/(t+1)
+        rec_states[t]=total_visited_states
+    return states_visits, states_hits, rec_hitrate, rec_states
 
 def iplc_multiple_fsm(
         input_seq:np.ndarray, 

@@ -84,7 +84,7 @@ def main():
     data=np.load('data/synthetic_fsm_num_files50_cache_size5_S50_T1000000.npy')
     data=data[:,np.newaxis]
     data=data.astype('int64')
-    cumulative_req,hits=hedge_single_cache(data,1000,50,5)
+    # cumulative_req,hits=hedge_fsm_single_cache(data,1000,50,5)
     
 
 if __name__=='__main__':
